@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Recognition Logs{% endblock %}
+
+{% block content %}
+
+<div class="card shadow border-0">
+
+    <div class="card-header bg-warning">
+
+        <h4>
+            <i class="fas fa-face-smile"></i>
+            Face Recognition Logs
+        </h4>
+
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-striped">
+
+            <thead class="table-dark">
+
+                <tr>
+
+                    <th>Snapshot</th>
+                    <th>Name</th>
+                    <th>Confidence</th>
+                    <th>Date Time</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for log in logs %}
+
+                <tr>
+
+                    <td>
+
+                        <img src="{{ log.snapshot.url }}"
+                             width="80"
+                             class="rounded">
+
+                    </td>
+
+                    <td>
+                        {{ log.student.name }}
+                    </td>
+
+                    <td>
+
+                        <span class="badge bg-success">
+
+                            {{ log.confidence }}%
+
+                        </span>
+
+                    </td>
+
+                    <td>
+                        {{ log.timestamp }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

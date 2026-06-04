@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2>Attendance History</h2>
+
+    <table class="table table-bordered">
+
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for attendance in records %}
+
+            <tr>
+
+                <td>
+
+                    {% if attendance.attendance_image %}
+                        <img src="{{ attendance.attendance_image.url }}"
+                             width="80">
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ attendance.student.name }}
+                </td>
+
+                <td>
+                    {{ attendance.status }}
+                </td>
+
+                <td>
+                    {{ attendance.date }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

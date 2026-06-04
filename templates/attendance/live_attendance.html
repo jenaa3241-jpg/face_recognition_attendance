@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="card">
+
+        <div class="card-header bg-success text-white">
+
+            <h3>
+                Live Attendance
+            </h3>
+
+        </div>
+
+        <div class="card-body text-center">
+
+            <button
+                class="btn btn-success btn-lg"
+                onclick="startAttendance()">
+
+                Start Attendance
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function startAttendance(){
+
+    window.location.href =
+    "/attendance/capture/";
+
+}
+
+</script>
+
+{% endblock %}
