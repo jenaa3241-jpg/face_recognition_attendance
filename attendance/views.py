@@ -10,37 +10,25 @@ from students.models import Student
 from django.core.files.base import ContentFile
 
 import os
+from django.core.files.base import ContentFile
 
 def capture_attendance(request):
-
     camera = cv2.VideoCapture(0)
-
     ret, frame = camera.read()
-
     camera.release()
 
     if ret:
-
         student = Student.objects.first()
-
         filename = f"{student.id}.jpg"
 
-        path = os.path.join(
-            "media/attendance",
-            filename
-        )
-
+        path = os.path.join("media/attendance", filename)
         cv2.imwrite(path, frame)
 
-        Attendance.objects.create(
-            student=student,
-            attendance_image=f'attendance/{filename}',
-            status='Present'
-        )
+        attendance = Attendance(student=student)
+        attendance.image.save(filename, ContentFile(open(path, "rb").read()))
+        attendance.save()
 
-    return redirect(
-        'attendance:attendance_history'
-    )
+    return redirect('attendance:attendance_history')
 
 from django.shortcuts import render
 from .models import Attendance

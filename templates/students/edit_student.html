@@ -1,49 +1,186 @@
 {% extends 'base.html' %}
 
-{% block title %}
-Edit Student
-{% endblock %}
+{% block title %}Edit Student{% endblock %}
 
 {% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-warning text-dark py-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h4 class="mb-0 fw-bold">
+                            <i class="fas fa-user-edit me-2"></i> Update Student
+                        </h4>
+                        <span class="badge bg-dark text-warning px-3 py-2">Edit Mode</span>
+                    </div>
+                </div>
 
-<div class="container-fluid">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="border rounded-4 p-3 bg-light text-center h-100">
+                                <h6 class="fw-bold mb-3">Current Photo</h6>
 
-    <div class="card shadow border-0">
+                                <img id="photoPreview"
+                                     src="{% if student.photo %}{{ student.photo.url }}{% endif %}"
+                                     class="img-fluid rounded-3 shadow-sm mb-3"
+                                     style="max-height: 220px; object-fit: cover; {% if not student.photo %}display:none;{% endif %}"
+                                     alt="Student Photo">
 
-        <div class="card-header bg-warning">
+                                <div id="photoPlaceholder"
+                                     class="bg-secondary-subtle rounded-3 d-flex align-items-center justify-content-center mb-3"
+                                     style="height: 220px; {% if student.photo %}display:none;{% endif %}">
+                                    <span class="text-muted">No photo uploaded</span>
+                                </div>
 
-            <h4>
+                                <video id="cameraPreview" autoplay playsinline
+                                       class="img-fluid rounded-3 shadow-sm mb-2"
+                                       style="max-height: 220px; display:none;"></video>
 
-                <i class="fas fa-edit"></i>
+                                <canvas id="canvas" style="display:none;"></canvas>
 
-                Update Student
+                                <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="openCamera()">
+                                    Open Camera
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm mb-2" onclick="retakePhoto()">
+                                    Retake Photo
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm mb-2" onclick="capturePhoto()">
+                                    Take Photo
+                                </button>
+                            </div>
+                        </div>
 
-            </h4>
+                        <div class="col-md-8">
+                            <form method="POST" enctype="multipart/form-data" id="studentForm">
+                                {% csrf_token %}
 
+                                <input type="hidden" name="captured_image" id="captured_image">
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Student ID</label>
+                                        {{ form.student_id }}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Name</label>
+                                        {{ form.name }}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Email</label>
+                                        {{ form.email }}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Department</label>
+                                        {{ form.department }}
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Embedding</label>
+                                        {{ form.embedding }}
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn btn-warning fw-semibold px-4">
+                                        <i class="fas fa-save me-2"></i>Update
+                                    </button>
+                                    <a href="{% url 'students:student_list' %}" class="btn btn-outline-secondary px-4">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="card-body">
-
-            <form method="POST"
-                  enctype="multipart/form-data">
-
-                {% csrf_token %}
-
-                {{ form.as_p }}
-
-                <button type="submit"
-                        class="btn btn-warning">
-
-                    Update
-
-                </button>
-
-            </form>
-
-        </div>
-
     </div>
-
 </div>
 
+<script>
+let stream = null;
+
+async function openCamera() {
+    const video = document.getElementById('cameraPreview');
+    const preview = document.getElementById('photoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        if (preview) preview.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'none';
+    } catch (err) {
+        alert('Camera access denied or not available.');
+        console.error(err);
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraPreview');
+    const canvas = document.getElementById('canvas');
+    const hiddenInput = document.getElementById('captured_image');
+    const preview = document.getElementById('photoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+
+    if (!video.srcObject) {
+        alert('Open camera first.');
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataURL = canvas.toDataURL('image/png');
+    hiddenInput.value = dataURL;
+
+    if (preview) {
+        preview.src = dataURL;
+        preview.style.display = 'block';
+    }
+    if (placeholder) placeholder.style.display = 'none';
+
+    stopCamera();
+}
+
+function retakePhoto() {
+    const hiddenInput = document.getElementById('captured_image');
+    hiddenInput.value = '';
+    openCamera();
+}
+
+function stopCamera() {
+    const video = document.getElementById('cameraPreview');
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+    }
+    video.style.display = 'none';
+}
+</script>
+
+<style>
+    .card { border-radius: 18px; }
+    .form-control,
+    .form-select,
+    textarea,
+    input[type="text"],
+    input[type="email"] {
+        border-radius: 10px !important;
+        padding: 10px 12px;
+        width: 100%;
+        border: 1px solid #ced4da;
+    }
+    textarea { min-height: 140px; }
+    .btn { border-radius: 10px; }
+</style>
 {% endblock %}

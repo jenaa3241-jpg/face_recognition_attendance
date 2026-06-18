@@ -65,39 +65,32 @@ def add_student(request):
         {'form': form}
     )
 
+
 @login_required(login_url='login')
 def edit_student(request, id):
-
-    student = get_object_or_404(
-        Student,
-        id=id
-    )
+    student = get_object_or_404(Student, id=id)
 
     if request.method == 'POST':
-
-        form = StudentForm(
-            request.POST,
-            request.FILES,
-            instance=student
-        )
-
+        form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
-            form.save()
+            student = form.save(commit=False)
+
+            captured_image = request.POST.get('captured_image')
+            if captured_image:
+                format, imgstr = captured_image.split(';base64,')
+                ext = format.split('/')[-1]
+                student.photo.save(
+                    f"{student.student_id}.{ext}",
+                    ContentFile(base64.b64decode(imgstr)),
+                    save=False
+                )
+
+            student.save()
             return redirect('students:student_list')
-
     else:
-        form = StudentForm(
-            instance=student
-        )
+        form = StudentForm(instance=student)
 
-    return render(
-        request,
-        'students/edit_student.html',
-        {
-            'form': form,
-            'student': student
-        }
-    )
+    return render(request, 'students/edit_student.html', {'form': form, 'student': student})
 
 @login_required(login_url='login')
 def delete_student(request, id):
